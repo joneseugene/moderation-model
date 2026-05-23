@@ -1,46 +1,69 @@
-import requests
+from huggingface_hub import InferenceClient
 from config import HF_TOKEN
 
-API_URL = "https://api-inference.huggingface.co/models/facebook/roberta-hate-speech-dynabench-r4-target"
-
-headers = {
-    "Authorization": f"Bearer {HF_TOKEN}"
-}
+client = InferenceClient(
+    provider="hf-inference",
+    api_key=HF_TOKEN,
+)
 
 
 def moderate_text(challenge: str, recommendation: str = ""):
     text = f"{challenge} {recommendation}".strip()
 
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": text},
-        timeout=30
+    result = client.text_classification(
+        text,
+        model="unitary/toxic-bert",
     )
 
-    response.raise_for_status()
-
-    results = response.json()
-    labels = results[0]
-
     scores = {
-        item["label"].lower(): round(float(item["score"]), 4)
-        for item in labels
+        item.label.lower(): round(float(item.score), 4)
+        for item in result
     }
 
-    hate_score = scores.get("hate", 0)
+    toxic = scores.get("toxic", 0)
+    obscene = scores.get("obscene", 0)
+    insult = scores.get("insult", 0)
+    threat = scores.get("threat", 0)
+    severe_toxic = scores.get("severe_toxic", 0)
+    identity_hate = scores.get("identity_hate", 0)
 
-    action = "allow"
+    block = (
+        threat >= 0.55
+        or severe_toxic >= 0.60
+        or identity_hate >= 0.60
+        or insult >= 0.85
+        or (
+            toxic >= 0.97
+            and obscene >= 0.98
+        )
+    )
 
-    if hate_score >= 0.85:
-        action = "block"
-    elif hate_score >= 0.45:
-        action = "review"
+    action = "block" if block else "allow"
+
+    categories = []
+
+    if toxic >= 0.60:
+        categories.append("toxic")
+
+    if obscene >= 0.75:
+        categories.append("obscene")
+
+    if insult >= 0.50:
+        categories.append("insult")
+
+    if threat >= 0.55:
+        categories.append("threat")
+
+    if severe_toxic >= 0.60:
+        categories.append("severe_toxic")
+
+    if identity_hate >= 0.60:
+        categories.append("identity_hate")
 
     return {
         "success": True,
         "action": action,
-        "flagged": action != "allow",
-        "categories": ["hate"] if action != "allow" else [],
+        "flagged": block,
+        "categories": categories,
         "scores": scores
     }
