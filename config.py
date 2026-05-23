@@ -5,6 +5,8 @@ load_dotenv()
 
 MODERATION_API_KEY = os.getenv("MODERATION_API_KEY")
 
+PORT = os.getenv("PORT")
+
 MODEL_NAME_ENV = os.getenv(
     "MODEL_NAME",
     "unitary/multilingual-toxic-xlm-roberta"
