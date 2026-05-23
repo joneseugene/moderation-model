@@ -3,19 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 MODERATION_API_KEY = os.getenv("MODERATION_API_KEY")
-
-PORT = os.getenv("PORT")
-
-MODEL_NAME_ENV = os.getenv(
-    "MODEL_NAME",
-    "unitary/multilingual-toxic-xlm-roberta"
-)
-
-MODEL_DIRECTORY_ENV = os.getenv(
-    "MODEL_DIRECTORY",
-    "ai/multilingual-toxic-xlm-roberta"
-)
+HF_TOKEN = os.getenv("HF_TOKEN")
+PORT = int(os.getenv("PORT", 8000))
 
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
