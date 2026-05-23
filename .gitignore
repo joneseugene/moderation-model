@@ -1,0 +1,5 @@
+.env
+temp
+*.
+ai/
+__pycache__
