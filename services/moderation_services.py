@@ -31,10 +31,11 @@ def moderate_text(challenge: str, recommendation: str = ""):
         threat >= 0.55
         or severe_toxic >= 0.60
         or identity_hate >= 0.60
-        or insult >= 0.85
+        or insult >= 0.60
+        or obscene >= 0.85
         or (
-            toxic >= 0.97
-            and obscene >= 0.98
+            toxic >= 0.95
+            and insult >= 0.50
         )
     )
 
